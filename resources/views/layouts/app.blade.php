@@ -99,12 +99,14 @@
                 @endif
             </a>
 
-            <!-- Terminal POS Kasir -->
-            <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all {{ request()->routeIs('pos.index') ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 group' }}">
-                <span class="material-symbols-outlined text-xl {{ request()->routeIs('pos.index') ? '' : 'group-hover:text-emerald-400' }} transition-colors">shopping_cart</span>
-                <span>Terminal POS Kasir</span>
-                <span class="ml-auto px-2 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 uppercase tracking-wider">Live</span>
-            </a>
+            @if(auth()->user()->isKasir())
+                <!-- Terminal POS Kasir (Kasir Only) -->
+                <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all {{ request()->routeIs('pos.index') ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 group' }}">
+                    <span class="material-symbols-outlined text-xl {{ request()->routeIs('pos.index') ? '' : 'group-hover:text-emerald-400' }} transition-colors">shopping_cart</span>
+                    <span>Terminal POS Kasir</span>
+                    <span class="ml-auto px-2 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 uppercase tracking-wider">Live</span>
+                </a>
+            @endif
 
             @if(auth()->user()->isAdmin())
                 <!-- Master Produk (Admin Only) -->
@@ -120,11 +122,44 @@
                 </a>
             @endif
 
-            <!-- Riwayat Penjualan -->
-            <a href="{{ route('transactions.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all {{ request()->routeIs('transactions.index') ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 group' }}">
-                <span class="material-symbols-outlined text-xl {{ request()->routeIs('transactions.index') ? 'text-amber-400' : 'group-hover:text-amber-400' }} transition-colors">receipt_long</span>
-                <span>Riwayat Penjualan</span>
-            </a>
+            <!-- Kelola Transaksi Toko (Option Accordion Dropdown) -->
+            <details class="group border border-slate-800/80 rounded-xl bg-slate-900/60 overflow-hidden transition-all" {{ request()->routeIs('transactions.index') ? 'open' : '' }}>
+                <summary class="flex items-center justify-between px-3.5 py-2.5 font-semibold text-xs text-slate-300 hover:text-white cursor-pointer select-none transition-all hover:bg-slate-800/60">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-xl text-amber-400">receipt_long</span>
+                        <span>{{ auth()->user()->isAdmin() ? 'Kelola Transaksi Toko' : 'Riwayat Penjualan' }}</span>
+                    </div>
+                    <span class="material-symbols-outlined text-sm text-slate-400 group-open:rotate-180 transition-transform">expand_more</span>
+                </summary>
+
+                <!-- Sub-Menu Options -->
+                <div class="px-2 pb-2 pt-1 space-y-1 bg-slate-950/60 border-t border-slate-800/60">
+                    <a href="{{ route('transactions.index', ['type' => 'all']) }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all {{ request()->query('type') === 'all' || (request()->routeIs('transactions.index') && !request()->has('type')) ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-glow' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50' }}">
+                        <span class="material-symbols-outlined text-base text-amber-400">receipt_long</span>
+                        <span>Semua Transaksi</span>
+                    </a>
+
+                    <a href="{{ route('transactions.index', ['type' => 'penjualan']) }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all {{ request()->query('type') === 'penjualan' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50' }}">
+                        <span class="material-symbols-outlined text-base text-emerald-400">shopping_cart</span>
+                        <span>Penjualan POS</span>
+                    </a>
+
+                    <a href="{{ route('transactions.index', ['type' => 'pengeluaran']) }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all {{ request()->query('type') === 'pengeluaran' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50' }}">
+                        <span class="material-symbols-outlined text-base text-rose-400">payments</span>
+                        <span>Pengeluaran Operasional</span>
+                    </a>
+
+                    <a href="{{ route('transactions.index', ['type' => 'pembelian']) }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all {{ request()->query('type') === 'pembelian' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50' }}">
+                        <span class="material-symbols-outlined text-base text-cyan-400">local_shipping</span>
+                        <span>Pembelian Stok</span>
+                    </a>
+
+                    <a href="{{ route('transactions.index', ['type' => 'bayar_hutang']) }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all {{ request()->query('type') === 'bayar_hutang' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50' }}">
+                        <span class="material-symbols-outlined text-base text-purple-400">account_balance_wallet</span>
+                        <span>Bayar Hutang / Kasbon</span>
+                    </a>
+                </div>
+            </details>
 
             <!-- Profil Saya -->
             <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition-all {{ request()->routeIs('profile.edit') ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 group' }}">
@@ -203,11 +238,21 @@
                 <span>{{ auth()->user()->name }}</span>
             </a>
 
-            <!-- Quick Action POS Button -->
-            <a href="{{ route('pos.index') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-glow-emerald transition-all transform active:scale-95">
-                <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
-                <span>+ Buka Kasir</span>
-            </a>
+
+
+            @if(auth()->user()->isKasir())
+                <!-- Quick Action POS Button for Kasir -->
+                <a href="{{ route('pos.index') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-glow-emerald transition-all transform active:scale-95">
+                    <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
+                    <span>+ Buka Kasir</span>
+                </a>
+            @else
+                <!-- Quick Action Master Produk for Admin -->
+                <a href="{{ route('products.index') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow transition-all transform active:scale-95">
+                    <span class="material-symbols-outlined text-lg">inventory_2</span>
+                    <span>+ Master Produk</span>
+                </a>
+            @endif
         </div>
     </header>
 

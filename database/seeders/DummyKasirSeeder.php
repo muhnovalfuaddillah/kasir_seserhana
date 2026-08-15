@@ -92,6 +92,15 @@ class DummyKasirSeeder extends Seeder
             ],
             [
                 'category' => 'Non-Coffee & Milk',
+                'barcode' => '8993412101040',
+                'name' => 'Air Mineral Le Minerale 600ml',
+                'purchase_price' => 2500,
+                'selling_price' => 4000,
+                'stock' => 50,
+                'unit' => 'botol',
+            ],
+            [
+                'category' => 'Non-Coffee & Milk',
                 'barcode' => '8992001002',
                 'name' => 'Susu UHT Full Cream 1 Liter',
                 'purchase_price' => 14000,

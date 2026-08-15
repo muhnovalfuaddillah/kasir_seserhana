@@ -29,10 +29,17 @@
                     <span class="material-symbols-outlined text-base">analytics</span>
                     <span>Laporan Rekap</span>
                 </a>
-                <a href="{{ route('pos.index') }}" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-glow flex items-center gap-2 transition-all">
-                    <span class="material-symbols-outlined text-base">point_of_sale</span>
-                    <span>Buka Terminal Kasir</span>
-                </a>
+                @if(auth()->user()->isKasir())
+                    <a href="{{ route('pos.index') }}" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-glow flex items-center gap-2 transition-all">
+                        <span class="material-symbols-outlined text-base">point_of_sale</span>
+                        <span>Buka Terminal Kasir</span>
+                    </a>
+                @else
+                    <a href="{{ route('products.index') }}" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-glow flex items-center gap-2 transition-all">
+                        <span class="material-symbols-outlined text-base">inventory_2</span>
+                        <span>Kelola Master Produk</span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -115,6 +122,64 @@
             </div>
         </div>
     </div>
+
+    @if(auth()->user()->isAdmin())
+        <!-- Admin Quick Access: Kelola Transaksi Toko -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400">account_balance_wallet</span>
+                    Pintasan Pengelolaan Transaksi Toko (Admin)
+                </h3>
+                <a href="{{ route('transactions.index') }}" class="text-xs font-semibold text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                    <span>Buka Pusat Transaksi</span>
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <a href="{{ route('transactions.index', ['type' => 'penjualan']) }}" class="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 transition-all flex items-center gap-3 group">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined text-base">shopping_cart</span>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">Penjualan POS</div>
+                        <div class="text-[10px] text-slate-400">Nota kasir</div>
+                    </div>
+                </a>
+
+                <a href="{{ route('transactions.index', ['type' => 'pengeluaran']) }}" class="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 transition-all flex items-center gap-3 group">
+                    <div class="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined text-base">payments</span>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white group-hover:text-rose-400 transition-colors">Pengeluaran</div>
+                        <div class="text-[10px] text-slate-400">Catat operasional</div>
+                    </div>
+                </a>
+
+                <a href="{{ route('transactions.index', ['type' => 'pembelian']) }}" class="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 transition-all flex items-center gap-3 group">
+                    <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30 group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined text-base">local_shipping</span>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">Pembelian Stok</div>
+                        <div class="text-[10px] text-slate-400">Restock supplier</div>
+                    </div>
+                </a>
+
+                <a href="{{ route('transactions.index', ['type' => 'bayar_hutang']) }}" class="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 transition-all flex items-center gap-3 group">
+                    <div class="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined text-base">account_balance_wallet</span>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">Bayar Hutang</div>
+                        <div class="text-[10px] text-slate-400">Pelunasan supplier</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    @endif
 
     <!-- Middle Section: Chart & Payment Distribution -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

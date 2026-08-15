@@ -251,9 +251,9 @@
                             <span class="material-symbols-outlined text-sm">check_circle</span>
                             Batal / Retur Transaksi Kasir
                         </li>
-                        <li class="flex items-center gap-2 text-emerald-400">
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                            Akses Penuh Terminal Kasir POS
+                        <li class="flex items-center gap-2 text-slate-500">
+                            <span class="material-symbols-outlined text-sm">block</span>
+                            Terminal POS Kasir (Khusus Role Kasir)
                         </li>
                     @else
                         <li class="flex items-center gap-2 text-emerald-400">

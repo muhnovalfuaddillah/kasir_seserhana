@@ -30,10 +30,16 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
-    // Terminal Kasir POS
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
-    Route::get('/pos/search', [PosController::class, 'search'])->name('pos.search');
-    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    // ----------------------------------------------------
+    // KASIR ONLY ROUTES (Khusus Role Kasir Operasional)
+    // ----------------------------------------------------
+    Route::middleware('role:kasir')->group(function () {
+        // Terminal Kasir POS
+        Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+        Route::get('/pos/search', [PosController::class, 'search'])->name('pos.search');
+        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+        Route::post('/pos/quick-product', [PosController::class, 'quickStoreProduct'])->name('pos.quick_product');
+    });
 
     // Riwayat Transaksi (Lihat & Struk)
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
@@ -50,6 +56,12 @@ Route::middleware('auth')->group(function () {
 
         // Batal / Retur Transaksi
         Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel'])->name('transactions.cancel');
+
+        // Transaksi Tambahan Admin (Pengeluaran, Pembelian Stok, Bayar Hutang)
+        Route::post('/transactions/expense', [TransactionController::class, 'storeExpense'])->name('transactions.store_expense');
+        Route::post('/transactions/purchase', [TransactionController::class, 'storePurchase'])->name('transactions.store_purchase');
+        Route::post('/transactions/debt-payment', [TransactionController::class, 'storeDebtPayment'])->name('transactions.store_debt');
+        Route::post('/transactions/customer-debt-payment', [TransactionController::class, 'storeCustomerDebtPayment'])->name('transactions.store_customer_debt');
 
         // Laporan Keuangan & HPP Laba Rugi
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

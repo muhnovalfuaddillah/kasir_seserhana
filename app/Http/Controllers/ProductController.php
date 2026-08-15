@@ -33,10 +33,20 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        if (!$request->filled('barcode') || trim($request->barcode) === '') {
+            $request->merge([
+                'barcode' => 'BRC-' . strtoupper(Str::random(8))
+            ]);
+        } else {
+            $request->merge([
+                'barcode' => trim($request->barcode)
+            ]);
+        }
+
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode',
+            'barcode' => 'required|string|unique:products,barcode',
             'purchase_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -52,7 +62,7 @@ class ProductController extends Controller
         Product::create([
             'category_id' => $request->category_id,
             'name' => $request->name,
-            'barcode' => $request->barcode ?? 'BRC-' . strtoupper(Str::random(8)),
+            'barcode' => $request->barcode,
             'purchase_price' => $request->purchase_price,
             'selling_price' => $request->selling_price,
             'stock' => $request->stock,

@@ -71,9 +71,10 @@ class ReportController extends Controller
             fputcsv($handle, ['Metrik', 'Nilai (Rp)']);
             fputcsv($handle, ['Total Omset Penjualan', $data['totalRevenue']]);
             fputcsv($handle, ['Total Modal HPP', $data['totalCogs']]);
+            fputcsv($handle, ['Total Pengeluaran Operasional', $data['totalExpenses']]);
             fputcsv($handle, ['Keuntungan Bersih (Profit)', $data['netProfit']]);
             fputcsv($handle, ['Total Potongan Diskon', $data['totalDiscount']]);
-            fputcsv($handle, ['Total Transaksi Lunas', $data['transactionCount']]);
+            fputcsv($handle, ['Total Transaksi Penjualan Lunas', $data['transactionCount']]);
             fputcsv($handle, ['Pemasukan Tunai (Cash)', $data['cashTotal']]);
             fputcsv($handle, ['Pemasukan QRIS (Digital)', $data['qrisTotal']]);
             fputcsv($handle, ['Pemasukan EDC / Debit', $data['edcTotal']]);
@@ -95,14 +96,15 @@ class ReportController extends Controller
 
             // Transactions Detail Table
             fputcsv($handle, ['--- RINCIAN SELURUH TRANSAKSI ---']);
-            fputcsv($handle, ['No Invoice', 'Waktu Transaksi', 'Nama Kasir', 'Nama Pelanggan', 'Metode Pembayaran', 'Status', 'Total Tagihan (Rp)']);
+            fputcsv($handle, ['No Invoice', 'Jenis', 'Waktu Transaksi', 'Kasir / Admin', 'Subjek / Pelanggan / Supplier', 'Metode Bayar', 'Status', 'Total (Rp)']);
 
             foreach ($transactions as $trx) {
                 fputcsv($handle, [
                     $trx->invoice_number,
+                    strtoupper($trx->type),
                     $trx->created_at->format('Y-m-d H:i:s'),
                     $trx->cashier_name,
-                    $trx->customer_name,
+                    $trx->description ?? $trx->customer_name,
                     strtoupper($trx->payment_method),
                     strtoupper($trx->status),
                     $trx->total_amount
@@ -118,37 +120,47 @@ class ReportController extends Controller
 
     private function getReportData($startDate, $endDate)
     {
-        $transactionsQuery = Transaction::whereDate('created_at', '>=', $startDate)
+        $salesQuery = Transaction::whereDate('created_at', '>=', $startDate)
             ->whereDate('created_at', '<=', $endDate)
-            ->where('status', 'completed');
+            ->where('status', 'completed')
+            ->where('type', 'penjualan');
 
-        $totalRevenue = (clone $transactionsQuery)->sum('total_amount');
-        $transactionCount = (clone $transactionsQuery)->count();
-        $totalDiscount = (clone $transactionsQuery)->sum('discount_amount');
+        $totalRevenue = (clone $salesQuery)->sum('total_amount');
+        $transactionCount = (clone $salesQuery)->count();
+        $totalDiscount = (clone $salesQuery)->sum('discount_amount');
+
+        $totalExpenses = Transaction::whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->where('status', 'completed')
+            ->where('type', 'pengeluaran')
+            ->sum('total_amount');
 
         $detailsQuery = TransactionDetail::whereHas('transaction', function ($q) use ($startDate, $endDate) {
             $q->whereDate('created_at', '>=', $startDate)
               ->whereDate('created_at', '<=', $endDate)
-              ->where('status', 'completed');
+              ->where('status', 'completed')
+              ->where('type', 'penjualan');
         });
 
         $totalCogs = (clone $detailsQuery)->selectRaw('SUM(purchase_price * quantity) as total_cogs')->value('total_cogs') ?? 0;
-        $netProfit = $totalRevenue - $totalCogs;
+        $netProfit = $totalRevenue - $totalCogs - $totalExpenses;
 
-        $cashTotal = (clone $transactionsQuery)->where('payment_method', 'cash')->sum('total_amount');
-        $qrisTotal = (clone $transactionsQuery)->where('payment_method', 'qris')->sum('total_amount');
-        $edcTotal = (clone $transactionsQuery)->where('payment_method', 'edc')->sum('total_amount');
+        $cashTotal = (clone $salesQuery)->where('payment_method', 'cash')->sum('total_amount');
+        $qrisTotal = (clone $salesQuery)->where('payment_method', 'qris')->sum('total_amount');
+        $edcTotal = (clone $salesQuery)->where('payment_method', 'edc')->sum('total_amount');
 
         $dailyReports = Transaction::selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(total_amount) as revenue')
             ->whereDate('created_at', '>=', $startDate)
             ->whereDate('created_at', '<=', $endDate)
             ->where('status', 'completed')
+            ->where('type', 'penjualan')
             ->groupBy('date')
             ->orderBy('date', 'desc')
             ->get();
 
         return [
             'totalRevenue' => $totalRevenue,
+            'totalExpenses' => $totalExpenses,
             'transactionCount' => $transactionCount,
             'totalDiscount' => $totalDiscount,
             'totalCogs' => $totalCogs,
