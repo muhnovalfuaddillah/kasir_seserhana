@@ -100,27 +100,6 @@
                 </button>
             </form>
 
-            <!-- Quick Fill Demo Login Preset -->
-            <div class="pt-4 border-t border-slate-800/80 space-y-2">
-                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">⚡ Akses Login Cepat Demo</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="quickFill('admin@kasir.com', 'password123')" aria-label="Isi otomatis akun Demo Admin" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-colors group">
-                        <div class="flex items-center justify-between text-[11px] font-bold text-white group-hover:text-brand-300">
-                            <span>👑 Role Admin</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </div>
-                        <span class="text-[10px] text-slate-500 font-mono">admin@kasir.com</span>
-                    </button>
-
-                    <button type="button" onclick="quickFill('kasir@kasir.com', 'password123')" aria-label="Isi otomatis akun Demo Kasir" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-colors group">
-                        <div class="flex items-center justify-between text-[11px] font-bold text-white group-hover:text-emerald-400">
-                            <span>🛒 Role Kasir</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </div>
-                        <span class="text-[10px] text-slate-500 font-mono">kasir@kasir.com</span>
-                    </button>
-                </div>
-            </div>
         </div>
 
         <p class="text-center text-[11px] text-slate-500">
@@ -129,11 +108,6 @@
     </main>
 
     <script>
-        function quickFill(email, password) {
-            document.getElementById('emailInput').value = email;
-            document.getElementById('passwordInput').value = password;
-        }
-
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('passwordInput');
             const eyeSvg = document.getElementById('pwdEyeIcon');
