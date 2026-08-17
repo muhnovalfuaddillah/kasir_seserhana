@@ -14,9 +14,12 @@ class TransactionDetail extends Model
         'product_id',
         'product_name',
         'purchase_price',
+        'normal_price',
         'selling_price',
         'quantity',
         'subtotal',
+        'is_wholesale',
+        'wholesale_label',
     ];
 
     public function transaction()

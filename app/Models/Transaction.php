@@ -10,6 +10,8 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
+        'customer_id',
         'invoice_number',
         'type',
         'description',
@@ -25,6 +27,16 @@ class Transaction extends Model
         'payment_method',
         'status',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function details()
     {

@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Dashboard - Kinetic POS System')
+
 @section('content')
-<main class="p-4 sm:p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
+<div class="p-4 sm:p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
     
     <!-- Hero / Welcome Banner -->
     <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-900 p-6 sm:p-8 border border-slate-800/80 shadow-2xl">
@@ -48,7 +50,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
         <!-- Card 1: Total Omset Hari Ini -->
-        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-brand-500/40 transition-all">
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-brand-500/40 transition-all flex flex-col justify-between h-full">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Omset Hari Ini</span>
                 <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30 group-hover:scale-110 transition-transform">
@@ -75,7 +77,7 @@
         </div>
 
         <!-- Card 2: Total Transaksi -->
-        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-indigo-500/40 transition-all">
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-indigo-500/40 transition-all flex flex-col justify-between h-full">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Transaksi</span>
                 <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 group-hover:scale-110 transition-transform">
@@ -91,7 +93,7 @@
         </div>
 
         <!-- Card 3: Produk Terjual -->
-        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-all flex flex-col justify-between h-full">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Item Terjual</span>
                 <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform">
@@ -107,7 +109,7 @@
         </div>
 
         <!-- Card 4: Non-Tunai / QRIS Ratio -->
-        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-amber-500/40 transition-all">
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-amber-500/40 transition-all flex flex-col justify-between h-full">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Non-Tunai (QRIS/EDC)</span>
                 <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 group-hover:scale-110 transition-transform">
@@ -442,5 +444,5 @@
             </div>
         </div>
     </div>
-</main>
+</div>
 @endsection

@@ -1,7 +1,56 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+<style>
+@media print {
+    @page {
+        size: 58mm auto;
+        margin: 0;
+    }
+    html, body {
+        width: 58mm !important;
+        background: #fff !important;
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    body * {
+        visibility: hidden !important;
+    }
+    #viewReceiptModal, #viewReceiptModal * {
+        visibility: visible !important;
+    }
+    #viewReceiptModal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 58mm !important;
+        max-width: 58mm !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        box-shadow: none !important;
+    }
+    #viewReceiptModal > div {
+        width: 58mm !important;
+        max-width: 58mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 4px 6px !important;
+        margin: 0 !important;
+        color: #000 !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 10px !important;
+        line-height: 1.2 !important;
+    }
+    #viewReceiptModal button, .no-print {
+        display: none !important;
+    }
+}
+</style>
+
+<div class="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
     
     <!-- Page Header & Action Buttons -->
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -103,8 +152,8 @@
 
             <div>
                 <label class="block text-[10px] font-semibold text-slate-400 mb-1">Metode Bayar</label>
-                <select name="payment_method" class="w-full bg-slate-900 text-xs text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500">
-                    <option value="">Semua</option>
+                <select name="payment_method" data-placeholder="-- Semua Metode --" class="select-searchable w-full bg-slate-900 text-xs text-white rounded-xl px-3 py-2 border border-slate-800 focus:outline-none focus:border-brand-500">
+                    <option value=""></option>
                     <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Tunai (Cash)</option>
                     <option value="qris" {{ request('payment_method') == 'qris' ? 'selected' : '' }}>QRIS</option>
                     <option value="edc" {{ request('payment_method') == 'edc' ? 'selected' : '' }}>EDC / Debit</option>
@@ -211,7 +260,6 @@
             {{ $transactions->links() }}
         </div>
     </div>
-</main>
 
 <!-- Modal 1: Catat Pengeluaran Operasional -->
 <div id="expenseModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
@@ -487,21 +535,36 @@
 
     function viewReceipt(trx) {
         document.getElementById('viewRcptInvoice').textContent = `No: ${trx.invoice_number}`;
-        document.getElementById('viewRcptDate').textContent = new Date(trx.created_at).toLocaleDateString('id-ID');
+        
+        let formattedDate = '-';
+        if (trx.created_at) {
+            const dt = new Date(trx.created_at);
+            const dateStr = dt.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const timeStr = dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
+            formattedDate = `${dateStr} ${timeStr} WIB`;
+        }
+        document.getElementById('viewRcptDate').textContent = formattedDate;
         document.getElementById('viewRcptCashier').textContent = `Kasir: ${trx.cashier_name}`;
         document.getElementById('viewRcptCustomer').textContent = `Pelanggan: ${trx.customer_name}`;
 
         const itemsEl = document.getElementById('viewRcptItems');
         if (trx.details && trx.details.length > 0) {
-            itemsEl.innerHTML = trx.details.map(d => `
-                <div>
-                    <div class="font-bold">${d.product_name}</div>
-                    <div class="flex justify-between text-slate-600">
-                        <span>${d.quantity} x Rp ${formatRupiah(d.selling_price)}</span>
-                        <span class="font-semibold text-slate-900">Rp ${formatRupiah(d.subtotal)}</span>
+            itemsEl.innerHTML = trx.details.map(d => {
+                const isWholesale = d.is_wholesale || (d.normal_price && parseFloat(d.selling_price) < parseFloat(d.normal_price));
+                return `
+                    <div class="space-y-0.5 border-b border-dashed border-slate-200/80 pb-1.5 pt-1">
+                        <div class="font-bold text-slate-900 flex items-center justify-between">
+                            <span>${d.product_name}</span>
+                            ${isWholesale ? `<span class="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">GROSIR</span>` : ''}
+                        </div>
+                        <div class="flex justify-between text-slate-600 text-xs">
+                            <span>${d.quantity} x Rp ${formatRupiah(d.selling_price)}</span>
+                            <span class="font-bold text-slate-900">Rp ${formatRupiah(d.subtotal)}</span>
+                        </div>
+                        ${isWholesale ? `<div class="text-[9px] font-bold text-emerald-700 italic">🏷️ ${d.wholesale_label || 'Harga Grosir Tier'}</div>` : ''}
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         } else {
             itemsEl.innerHTML = `<div class="italic text-slate-500">${trx.description || 'Detail transaksi'}</div>`;
         }
@@ -516,7 +579,8 @@
     }
 
     function formatRupiah(num) {
-        return new Intl.NumberFormat('id-ID').format(num);
+        if (num === null || num === undefined || isNaN(num)) return '0';
+        return new Intl.NumberFormat('id-ID').format(Math.round(parseFloat(num)));
     }
 </script>
 @endsection

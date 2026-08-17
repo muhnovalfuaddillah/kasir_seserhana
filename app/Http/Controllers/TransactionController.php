@@ -92,10 +92,25 @@ class TransactionController extends Controller
                 'pay_amount' => $transaction->pay_amount + $payAmount,
             ]);
 
+            // Synchronize with Customer model if associated
+            if ($transaction->customer_id) {
+                $customer = \App\Models\Customer::find($transaction->customer_id);
+                if ($customer) {
+                    $customer->decrement('current_debt', min($payAmount, $customer->current_debt));
+                }
+            } else {
+                // Search customer by name
+                $customer = \App\Models\Customer::where('name', $transaction->customer_name)->first();
+                if ($customer) {
+                    $customer->decrement('current_debt', min($payAmount, $customer->current_debt));
+                }
+            }
+
             $invoiceNumber = 'PAY-CUST-' . date('YmdHis') . rand(10, 99);
 
             Transaction::create([
                 'invoice_number' => $invoiceNumber,
+                'customer_id' => $transaction->customer_id,
                 'type' => 'bayar_hutang',
                 'description' => "Pelunasan Hutang Pelanggan {$transaction->customer_name} (Nota #{$transaction->invoice_number})",
                 'cashier_name' => auth()->user()->name ?? 'Kasir',

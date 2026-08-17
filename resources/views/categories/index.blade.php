@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+<div class="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
     
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -62,7 +62,6 @@
             </div>
         @endforelse
     </div>
-</main>
 
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">

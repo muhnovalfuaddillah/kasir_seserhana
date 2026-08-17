@@ -5,6 +5,10 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\Branch;
+use App\Models\ProductBatch;
+use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use Illuminate\Database\Seeder;
@@ -16,6 +20,51 @@ class DummyKasirSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Seed Branches & Suppliers
+        $branchMain = Branch::create([
+            'name' => 'Cabang Utama (Pusat)',
+            'code' => 'CBG-01',
+            'phone' => '021-5550199',
+            'address' => 'Jl. Sudirman No. 88, Jakarta Pusat',
+            'is_main' => true,
+        ]);
+
+        $branchGudang = Branch::create([
+            'name' => 'Cabang 2 (Gudang Barat)',
+            'code' => 'CBG-02',
+            'phone' => '021-5550200',
+            'address' => 'Jl. Gatot Subroto No. 45, Jakarta Barat',
+            'is_main' => false,
+        ]);
+
+        $supplier1 = Supplier::create([
+            'name' => 'PT Indofood Sukses Makmur',
+            'phone' => '021-7890123',
+            'email' => 'sales@indofood.co.id',
+            'address' => 'Kawasan Industri Pulogadung, Jakarta',
+        ]);
+
+        $supplier2 = Supplier::create([
+            'name' => 'CV Berkah Distribusi Nusantara',
+            'phone' => '0812-9988-7766',
+            'email' => 'info@berkahdistribusi.com',
+            'address' => 'Jl. Pemuda No. 12, Bandung',
+        ]);
+
+        // Default Cash Categories
+        \App\Models\CashCategory::create(['name' => 'Gaji & Tunjangan Karyawan', 'type' => 'out', 'description' => 'Pembayaran gaji pokok, bonus, dan tunjangan']);
+        \App\Models\CashCategory::create(['name' => 'Beban Listrik, Air & Internet', 'type' => 'out', 'description' => 'Tagihan utilitas operasional bulanan toko']);
+        \App\Models\CashCategory::create(['name' => 'Sewa Tempat & Bangunan', 'type' => 'out', 'description' => 'Beban sewa lokasi toko']);
+        \App\Models\CashCategory::create(['name' => 'Perlengkapan & Kebersihan Toko', 'type' => 'out', 'description' => 'Bahan habis pakai operasional toko']);
+        \App\Models\CashCategory::create(['name' => 'Pemasaran & Iklan', 'type' => 'out', 'description' => 'Beban promosi, brosur, & iklan media sosial']);
+        \App\Models\CashCategory::create(['name' => 'Investasi / Tambahan Modal Owner', 'type' => 'in', 'description' => 'Setoran modal segar dari pemilik toko']);
+        \App\Models\CashCategory::create(['name' => 'Pemasukan Lain-Lain', 'type' => 'in', 'description' => 'Pendapatan di luar transaksi kasir']);
+
+        // Default Employees
+        \App\Models\Employee::create(['name' => 'Budi Santoso', 'position' => 'Kepala Toko', 'phone' => '0812-3344-5566', 'base_salary' => 4500000]);
+        \App\Models\Employee::create(['name' => 'Siti Rahmawati', 'position' => 'Senior Kasir', 'phone' => '0813-7788-9900', 'base_salary' => 3200000]);
+        \App\Models\Employee::create(['name' => 'Andi Wijaya', 'position' => 'Staf Gudang & Barista', 'phone' => '0857-1122-3344', 'base_salary' => 3000000]);
+
         // 1. Users & Accounts
         $admin = User::create([
             'name' => 'Pemilik Toko (Admin)',

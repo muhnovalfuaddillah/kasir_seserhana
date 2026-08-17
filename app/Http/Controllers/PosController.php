@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
@@ -11,25 +12,29 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
+use App\Models\StockMovement;
+
 class PosController extends Controller
 {
     public function index()
     {
         $categories = Category::all();
         // Urutkan produk dengan stok menipis (<= 5) & stok habis (0) paling atas
-        $products = Product::with('category')
+        $products = Product::with(['category', 'wholesalePrices'])
             ->orderByRaw("CASE WHEN stock <= 5 THEN 0 ELSE 1 END")
             ->orderBy('stock', 'asc')
             ->orderBy('name', 'asc')
             ->get();
 
         $customerDebts = Transaction::where('payment_method', 'hutang')->where('debt_amount', '>', 0)->orderBy('created_at', 'desc')->get();
-        return view('pos.index', compact('categories', 'products', 'customerDebts'));
+        $customers = Customer::where('status', 'active')->orderBy('name', 'asc')->get();
+
+        return view('pos.index', compact('categories', 'products', 'customerDebts', 'customers'));
     }
 
     public function search(Request $request)
     {
-        $query = Product::with('category')->where('stock', '>', 0);
+        $query = Product::with(['category', 'wholesalePrices'])->where('stock', '>', 0);
 
         if ($request->filled('q')) {
             $q = $request->q;
@@ -54,6 +59,7 @@ class PosController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
+            'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'nullable|string|max:255',
             'discount_amount' => 'nullable|numeric|min:0',
             'pay_amount' => 'required|numeric|min:0',
@@ -68,6 +74,11 @@ class PosController extends Controller
             ], 422);
         }
 
+        $customer = null;
+        if ($request->filled('customer_id')) {
+            $customer = Customer::find($request->customer_id);
+        }
+
         DB::beginTransaction();
         try {
             $items = $request->items;
@@ -75,7 +86,7 @@ class PosController extends Controller
             $transactionDetails = [];
 
             foreach ($items as $itemData) {
-                $product = Product::find($itemData['id']);
+                $product = Product::with('wholesalePrices')->find($itemData['id']);
 
                 if ($product->stock < $itemData['qty']) {
                     DB::rollBack();
@@ -85,19 +96,53 @@ class PosController extends Controller
                     ], 422);
                 }
 
-                $subtotal = $product->selling_price * $itemData['qty'];
+                // Kalkulasi harga grosir berjenjang berdasarkan Qty
+                $effectivePrice = $product->getWholesalePriceForQty($itemData['qty']);
+
+                // Jika pelanggan bertipe 'wholesale' / Reseller dan tidak ada tier grosir khusus, berikan harga grosir terendah
+                if ($customer && $customer->type === 'wholesale' && $product->wholesalePrices->count() > 0 && $effectivePrice == $product->selling_price) {
+                    $lowestTier = $product->wholesalePrices->sortBy('price')->first();
+                    if ($lowestTier) {
+                        $effectivePrice = $lowestTier->price;
+                    }
+                }
+
+                $subtotal = $effectivePrice * $itemData['qty'];
                 $totalAmount += $subtotal;
 
-                // Reduce stock
-                $product->decrement('stock', $itemData['qty']);
+                // Reduce stock & log Stock Movement
+                $stockBefore = $product->stock;
+                $stockAfter = $stockBefore - $itemData['qty'];
+                $product->stock = $stockAfter;
+                $product->save();
+
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'sale',
+                    'qty' => -$itemData['qty'],
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'reason' => 'Penjualan Kasir POS (Grosir/Eceran)',
+                ]);
+
+                $isWholesale = $effectivePrice < $product->selling_price;
+                $wholesaleLabel = '';
+                if ($isWholesale) {
+                    $tier = $product->wholesalePrices->where('min_qty', '<=', $itemData['qty'])->sortByDesc('min_qty')->first();
+                    $wholesaleLabel = ($tier && !empty($tier->unit_label)) ? $tier->unit_label : "Min {$itemData['qty']} {$product->unit}";
+                }
 
                 $transactionDetails[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
                     'purchase_price' => $product->purchase_price,
-                    'selling_price' => $product->selling_price,
+                    'normal_price' => $product->selling_price,
+                    'selling_price' => $effectivePrice,
                     'quantity' => $itemData['qty'],
                     'subtotal' => $subtotal,
+                    'is_wholesale' => $isWholesale,
+                    'wholesale_label' => $wholesaleLabel,
                 ];
             }
 
@@ -112,6 +157,19 @@ class PosController extends Controller
             if ($isHutang) {
                 $debtAmount = max(0, $finalTotal - $payAmount);
                 $changeAmount = 0;
+
+                // Validasi Credit Limit jika Pelanggan terdaftar memiliki Credit Limit > 0
+                if ($customer && $customer->credit_limit > 0) {
+                    $projectedDebt = $customer->current_debt + $debtAmount;
+                    if ($projectedDebt > $customer->credit_limit) {
+                        DB::rollBack();
+                        $sisaQuota = max(0, $customer->credit_limit - $customer->current_debt);
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Transaksi Kasbon ditolak! Melebihi Batas Limit Kasbon Pelanggan '{$customer->name}'. (Limit: Rp " . number_format($customer->credit_limit, 0, ',', '.') . ", Tunggakan Berjalan: Rp " . number_format($customer->current_debt, 0, ',', '.') . ", Sisa Kuota Kasbon: Rp " . number_format($sisaQuota, 0, ',', '.') . ")",
+                        ], 422);
+                    }
+                }
             } else {
                 if ($payAmount < $finalTotal) {
                     DB::rollBack();
@@ -124,10 +182,12 @@ class PosController extends Controller
             }
 
             $invoiceNumber = 'TRX-' . Carbon::now()->format('Ymd') . '-' . strtoupper(Str::random(4));
-            $customerName = $request->customer_name ?: ($isHutang ? 'Pelanggan Kasbon' : 'Pelanggan Umum');
+            $customerName = $customer ? $customer->name : ($request->customer_name ?: ($isHutang ? 'Pelanggan Kasbon' : 'Pelanggan Umum'));
 
             $transaction = Transaction::create([
                 'invoice_number' => $invoiceNumber,
+                'user_id' => auth()->id(),
+                'customer_id' => $customer ? $customer->id : null,
                 'type' => 'penjualan',
                 'description' => $isHutang ? "Kasbon/Hutang Pelanggan {$customerName} (Sisa: Rp " . number_format($debtAmount, 0, ',', '.') . ")" : "Penjualan POS Kasir",
                 'cashier_name' => auth()->user()->name ?? 'Kasir',
@@ -141,6 +201,11 @@ class PosController extends Controller
                 'payment_method' => $request->payment_method,
                 'status' => 'completed',
             ]);
+
+            // Jika transaksi hutang dan ada data pelanggan terdaftar, update current_debt pelanggan
+            if ($isHutang && $customer && $debtAmount > 0) {
+                $customer->increment('current_debt', $debtAmount);
+            }
 
             foreach ($transactionDetails as $detail) {
                 $detail['transaction_id'] = $transaction->id;
