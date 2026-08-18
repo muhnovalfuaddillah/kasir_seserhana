@@ -10,14 +10,16 @@
             margin: 0;
         }
         body {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 10px;
-            color: #000;
-            background: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10.5px;
+            line-height: 1.25;
+            color: #000000;
+            background: #ffffff;
             margin: 0 auto;
-            padding: 5px;
+            padding: 4px 6px;
             width: 58mm;
             box-sizing: border-box;
+            word-break: break-word;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -27,17 +29,30 @@
         .btn-print {
             background: #000;
             color: #fff;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             width: 100%;
+            font-size: 12px;
         }
         @media print {
             .no-print { display: none !important; }
-            body { padding: 0 !important; width: 58mm !important; }
+            html, body, body * {
+                color: #000000 !important;
+                font-weight: 700 !important;
+                opacity: 1 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border-color: #000000 !important;
+            }
+            body {
+                padding: 4px 6px !important;
+                width: 58mm !important;
+                margin: 0 !important;
+            }
         }
     </style>
 </head>

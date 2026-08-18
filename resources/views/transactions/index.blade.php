@@ -19,6 +19,12 @@
     }
     #viewReceiptModal, #viewReceiptModal * {
         visibility: visible !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        border-color: #000000 !important;
     }
     #viewReceiptModal {
         position: absolute !important;
@@ -39,10 +45,10 @@
         border: none !important;
         padding: 4px 6px !important;
         margin: 0 !important;
-        color: #000 !important;
-        font-family: 'Courier New', Courier, monospace !important;
-        font-size: 10px !important;
-        line-height: 1.2 !important;
+        color: #000000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 10.5px !important;
+        line-height: 1.25 !important;
     }
     #viewReceiptModal button, .no-print {
         display: none !important;
