@@ -1388,9 +1388,9 @@
             return;
         }
 
-        const subtotal = cart.reduce((sum, item) => sum + (item.selling_price * item.qty), 0);
-        const discount = getRawNumber(document.getElementById('discountInput').value);
-        const finalTotal = Math.max(0, subtotal - discount);
+        const cartTotals = getCartEffectiveTotals();
+        const discount = cartTotals.discount;
+        const finalTotal = cartTotals.finalTotal;
         const payAmount = getRawNumber(document.getElementById('payAmountInput').value);
 
         if (currentPaymentMethod !== 'hutang' && payAmount < finalTotal) {
